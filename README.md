@@ -39,6 +39,17 @@ Everything runs **locally in your browser** — no uploads, no tracking.
 
 ---
 
+## 📌 Pin Extension (Highly Recommended)
+
+To use SnapPDF faster, you should pin it to the toolbar:
+
+1. Click the **Extensions (🧩 icon)** in Chrome
+2. Find **SnapPDF**
+3. Click the **📌 Pin icon**
+
+👉 The SnapPDF button will now always be visible on your browser toolbar.
+---
+
 ## 🧑‍💻 How to Use
 
 1. Open any webpage (example: Google Drive preview)
@@ -49,15 +60,39 @@ Everything runs **locally in your browser** — no uploads, no tracking.
 
 ---
 
-## ⚠️ Important (Read This)
+~~## ⚠️ Important (Read This)~~
 
-### 👉 You MUST scroll to the bottom before generating PDF
+~~### 👉 You MUST scroll to the bottom before generating PDF~~
 
-Many modern websites (especially Google Drive) use **lazy loading**.
+~~Many modern websites (especially Google Drive) use **lazy loading**.~~
 
-If you don’t scroll:
-- ❌ Only partial pages will be captured
-- ❌ Missing content in final PDF
+~~If you don’t scroll:~~
+~~- ❌ Only partial pages will be captured~~
+~~- ❌ Missing content in final PDF~~
+
+### 👉 Auto-scroll is now built-in
+
+SnapPDF now automatically scrolls through the page to load all content before exporting.
+
+✔️ You **do NOT need to scroll manually anymore**  
+~~You MUST scroll to the bottom before generating PDF~~
+
+---
+
+### ⚠️ However, some pages may still require attention
+
+Due to how certain websites implement lazy loading:
+
+- Some content may load slower than expected
+- Extremely long or complex pages may require a second run
+
+---
+
+### ❗ If you encounter missing pages:
+
+- Wait a few seconds before clicking the button
+- Try running the export again
+- Ensure the page is fully visible (not minimized/background)
 
 ✔️ Always scroll until the end before clicking the button.
 
