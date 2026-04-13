@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "SnapPDF - Smart Web to PDF",
+  "version": "1.0.0",
+  "description": "Capture any webpage into a clean PDF (supports blob, data, canvas, http)",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {    
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/jspdf.umd.min.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
