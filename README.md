@@ -1,4 +1,4 @@
-# 📄 SnapPDF
+# 📄 SnapPDF – Webpage to PDF (Google Drive, blob, data, canvas)
 
 > Capture any webpage into a clean PDF — automatically.
 
@@ -6,7 +6,13 @@
 
 ## 🚀 Overview
 
-**SnapPDF** is a lightweight Chrome extension that converts webpages into high-quality PDFs.
+**SnapPDF** is a Chrome extension that lets you download and convert any webpage into a clean PDF.
+
+It is especially useful for:
+- Google Drive preview (no download button)
+- Protected PDF viewers
+- Long scrolling pages
+- Lazy-loaded content
 
 It intelligently detects how content is rendered and adapts automatically:
 
@@ -16,6 +22,15 @@ It intelligently detects how content is rendered and adapts automatically:
 - ✅ Canvas-rendered pages
 
 Everything runs **locally in your browser** — no uploads, no tracking.
+
+---
+
+## 💡 Use Cases
+
+- Download PDF from Google Drive without download button
+- Save long webpages as PDF
+- Export dynamic/lazy-loaded content
+- Capture protected document viewers
 
 ---
 
