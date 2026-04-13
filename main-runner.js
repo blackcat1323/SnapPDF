@@ -71,13 +71,69 @@
             return "unknown";
         }
 
-        const source = detectSource();
-        console.log("Detected source:", source);
+        let source = detectSource();
         if (source === "unknown") {
             console.warn("Fallback to blob");
             source = "blob";
         }
+
         update(5, `Source: ${source}`);
+
+        // ===== AUTO SCROLL (GOOGLE DRIVE) =====
+        async function autoScrollDrive() {
+            const pages = Array.from(
+                document.querySelectorAll(".ndfHFb-c4YZDc-cYSp0e-DARUcf")
+            );
+        
+            if (!pages.length) return pages;
+        
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].scrollIntoView();
+        
+                update(
+                    Math.round((i / pages.length) * 20),
+                    `Scrolling ${i + 1}/${pages.length}`
+                );
+        
+                await new Promise(r => setTimeout(r, 120));
+            }
+        
+            return pages;
+        }
+
+
+        async function autoScrollGeneric() {
+            const elements = Array.from(document.images)
+                .filter(img => img.src && (img.src.startsWith("data:") || img.src.startsWith("http")));
+        
+            if (!elements.length) return;
+        
+            console.log("Generic elements:", elements.length);
+        
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].scrollIntoView({
+                    behavior: "instant",
+                    block: "center"
+                });
+        
+                update(
+                    Math.round((i / elements.length) * 20),
+                    `Scrolling ${i + 1}/${elements.length}`
+                );
+        
+                await new Promise(r => setTimeout(r, 120));
+            }
+        }
+        
+        // ===== RUN =====
+        let pageContainers = [];
+
+        if (location.hostname.includes("drive.google.com")) {
+            pageContainers = await autoScrollDrive();
+        }else {
+            await autoScrollGeneric();
+            await new Promise(r => setTimeout(r, 500));
+        }
 
         // ===== WAIT =====
         async function waitImagesStable() {
@@ -95,35 +151,37 @@
             }
         }
 
-        async function waitBlobReady() {
+                // ===== WAIT =====
+        async function waitBlobReady(pageCount) {
             const start = Date.now();
 
-            while (Date.now() - start < 5000) {
-                const imgs = Array.from(document.images)
-                    .filter(i => i.src.startsWith("blob:"));
+            while (Date.now() - start < 15000) {
+                const imgs = Array.from(
+                    document.querySelectorAll("img[src^='blob:']")
+                ).filter(i => i.complete);
 
-                const ready = imgs.filter(i => i.naturalWidth > 0).length;
+                update(10, `Loading ${imgs.length}/${pageCount}`);
 
-                if (imgs.length && ready / imgs.length > 0.8) return;
+                if (imgs.length >= pageCount) return;
 
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 400));
             }
         }
 
         if (source === "blob") {
-            await waitBlobReady();
+            await waitBlobReady(pageContainers.length || 1);
         } else {
             await waitImagesStable();
         }
 
-        await new Promise(r => requestAnimationFrame(r));
+        await new Promise(r => setTimeout(r, 300));
 
         // ===== COLLECT =====
         let imgs = [];
 
         if (source === "data") {
             imgs = Array.from(document.images)
-                .filter(img => img.src.startsWith("data:image/png"))
+                .filter(img => img.src.startsWith("data:image"))
                 .map((img, i) => ({
                     el: img,
                     top: img.getBoundingClientRect().top + window.scrollY,
@@ -131,14 +189,17 @@
                 }));
         }
 
-        else if (source === "blob") {
-            imgs = Array.from(document.images)
-                .filter(img => img.src.startsWith("blob:"))
-                .map((img, i) => ({
-                    el: img, // 🔥 IMPORTANT
-                    top: img.getBoundingClientRect().top + window.scrollY,
-                    i
-                }));
+        else if (source === "blob" && pageContainers.length) {
+            for (let i = 0; i < pageContainers.length; i++) {
+                const img = pageContainers[i].querySelector("img");
+        
+                if (img && img.src.startsWith("blob:")) {
+                    imgs.push({
+                        el: img,
+                        i
+                    });
+                }
+            }
         }
 
         else if (source === "http") {
@@ -210,10 +271,7 @@
                 w = img.naturalWidth;
                 h = img.naturalHeight;
 
-                if (!w || !h) {
-                    console.warn("Skip invalid image");
-                    continue;
-                }
+                if (!w || !h) continue;
 
                 const w2 = Math.floor(w * SCALE);
                 const h2 = Math.floor(h * SCALE);
@@ -250,8 +308,6 @@
             }
         }
 
-        canvas.width = 0;
-
         if (!pdf) throw "No valid pages";
 
         update(95, "Building PDF...");
@@ -261,60 +317,56 @@
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
 
+        // ===== SMART FILENAME =====
         function generateFileName() {
             let name = "";
-        
-            // ===== 1. custom ID =====
+
             const custom = document.getElementById("doc-title");
             if (custom && custom.textContent.trim()) {
                 name = custom.textContent.trim();
             }
-        
-            // ===== 2. Google Drive =====
+
             if (!name && location.hostname.includes("drive.google.com")) {
-                const el = document.querySelector("[role='heading']");
+                const el =
+                    document.querySelector(".ndfHFb-c4YZDc-Wrql6b") || // title chuẩn Drive
+                    document.querySelector("[aria-label][role='heading']");
+
                 if (el && el.textContent.trim()) {
                     name = el.textContent.trim();
                 }
             }
-        
-            // ===== 3. Meta title  =====
+
             if (!name) {
                 const meta = document.querySelector("meta[property='og:title']");
                 if (meta && meta.content) {
                     name = meta.content.trim();
                 }
             }
-        
-            // ===== 4. document.title =====
+
             if (!name && document.title) {
                 name = document.title.trim();
             }
-        
-            // ===== 5. fallback domain =====
+
             if (!name) {
                 name = location.hostname.replace("www.", "");
             }
-        
-            // ===== CLEAN =====
+
             name = name
-                .replace(/[\\/:*?"<>|]/g, "")   // remove invalid chars
-                .replace(/\s+/g, " ")           // normalize spaces
+                .replace(/[\\/:*?"<>|]/g, "")
+                .replace(/\s+/g, " ")
                 .trim();
-        
-            // ===== LIMIT LENGTH =====
+
             if (name.length > 80) {
                 name = name.slice(0, 80) + "...";
             }
-        
-            // ===== TIMESTAMP =====
+
             const now = new Date();
             const ts = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
-        
+
             return `${name} - ${ts}.pdf`;
         }
-        const fileName = generateFileName();
-        a.download = fileName;
+
+        a.download = generateFileName();
         a.click();
 
         done("Download complete");
