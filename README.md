@@ -1,197 +1,116 @@
-# 📄 SnapPDF – Webpage to PDF (Google Drive, blob, data, canvas)
+# 📄 SnapPDF – Webpage to PDF (Google Drive, blob, data)
 
 > Capture any webpage into a clean PDF — automatically.
 
 ---
 
-## 🚀 Overview
+## 📑 Table of Contents
 
-**SnapPDF** is a Chrome extension that lets you download and convert any webpage into a clean PDF.
-
-It is especially useful for:
-- Google Drive preview (no download button)
-- Protected PDF viewers
-- Long scrolling pages
-- Lazy-loaded content
-
-It intelligently detects how content is rendered and adapts automatically:
-
-- ✅ Blob images (Google Drive, document viewers)
-- ✅ Data URLs (base64 images)
-- ✅ HTTP images
-- ✅ Canvas-rendered pages
-
-Everything runs **locally in your browser** — no uploads, no tracking.
+- [Overview](#-overview)
+- [Features](#-features)
+- [Installation](#-installation)
+- [Pin Extension](#-pin-extension-recommended)
+- [Usage](#-usage)
+- [Notes](#-notes)
+- [Troubleshooting](#-troubleshooting)
+- [Privacy](#-privacy)
+- [Tech](#-tech)
+- [Use Cases](#-use-cases)
+- [License](#-license)
 
 ---
 
-## 💡 Use Cases
+## 🚀 Overview
 
-- Download PDF from Google Drive without download button
-- Save long webpages as PDF
-- Export dynamic/lazy-loaded content
-- Capture protected document viewers
+**SnapPDF** is a Chrome extension that converts webpages into high-quality PDFs.
+
+Works especially well with:
+- Google Drive preview (no download button)
+- Lazy-loaded pages
+- Long scrolling content
+- Protected PDF viewers
 
 ---
 
 ## ✨ Features
 
-- 🧠 Smart source detection (auto-detects page structure)
-- 📄 Works with Google Drive preview & dynamic viewers
-- ⚡ Optimized performance (low memory, fast export)
-- 🎯 Clean PDF output (correct page order)
-- 🔒 Privacy-first (no data leaves your device)
+- 🧠 Smart source detection (blob, data, http, canvas)
+- 🔄 Auto-scroll to load full content
+- ⚡ Fast & memory optimized
+- 🎯 Correct page order
+- 🔒 Runs 100% locally (no data sent)
 
 ---
 
-## 📦 Installation (Developer Mode)
+## 📦 Installation
 
-1. Open Chrome  
-2. Go to: `chrome://extensions`
-3. Enable **Developer Mode**
-4. Click **Load unpacked**
-5. Select this project folder
-
----
-
-## 📌 Pin Extension (Highly Recommended)
-
-To use SnapPDF faster, you should pin it to the toolbar:
-
-1. Click the **Extensions (🧩 icon)** in Chrome
-2. Find **SnapPDF**
-3. Click the **📌 Pin icon**
-
-👉 The SnapPDF button will now always be visible on your browser toolbar.
----
-
-## 🧑‍💻 How to Use
-
-1. Open any webpage (example: Google Drive preview)
-2. ⚠️ **Scroll down to the bottom of the document**
-3. Click the **SnapPDF** extension
-4. Click **"Generate PDF"**
-5. Wait for processing → file will download automatically
+1. Go to `chrome://extensions`
+2. Enable **Developer Mode**
+3. Click **Load unpacked**
+4. Select this folder
 
 ---
 
-~~## ⚠️ Important (Read This)~~
+## 📌 Pin Extension (Recommended)
 
-~~### 👉 You MUST scroll to the bottom before generating PDF~~
-
-~~Many modern websites (especially Google Drive) use **lazy loading**.~~
-
-~~If you don’t scroll:~~
-~~- ❌ Only partial pages will be captured~~
-~~- ❌ Missing content in final PDF~~
-
-### 👉 Auto-scroll is now built-in
-
-SnapPDF now automatically scrolls through the page to load all content before exporting.
-
-✔️ You **do NOT need to scroll manually anymore**  
-~~You MUST scroll to the bottom before generating PDF~~
+- Click the **Extensions (🧩)** icon
+- Find **SnapPDF**
+- Click **📌 Pin**
 
 ---
 
-### ⚠️ However, some pages may still require attention
+## 🧑‍💻 Usage
 
-Due to how certain websites implement lazy loading:
-
-- Some content may load slower than expected
-- Extremely long or complex pages may require a second run
-
----
-
-### ❗ If you encounter missing pages:
-
-- Wait a few seconds before clicking the button
-- Try running the export again
-- Ensure the page is fully visible (not minimized/background)
-
-✔️ Always scroll until the end before clicking the button.
+1. Open any webpage (e.g. Google Drive preview)
+2. Click **SnapPDF**
+3. Click **Generate PDF**
+4. Wait → file downloads automatically
 
 ---
 
-## 🧠 How It Works
+## ⚠️ Notes
 
-SnapPDF uses different strategies depending on the page:
-
-| Source Type | Strategy |
-|------------|---------|
-| `blob:` images | Uses DOM images directly |
-| `data:` images | Extracts base64 directly |
-| `http` images | Loads with CORS-safe method |
-| `canvas` | Captures rendered content |
+- Auto-scroll is built-in → no manual scrolling needed  
+- Some pages may require running the tool twice  
+- For best results, wait a few seconds before starting  
 
 ---
 
 ## 🛠️ Troubleshooting
 
-### ❌ "No images found"
+**No images found**
+- Wait a bit → run again
+- Refresh page if needed
 
-- Make sure you **scrolled fully**
-- Try scrolling slower and wait 1–2 seconds
-- Reload page and try again
-
----
-
-### ❌ PDF missing pages
-
-- Page not fully loaded
-- Scroll again → re-run
-
----
-
-### ❌ Nothing happens
-
-- Refresh page
-- Re-open extension
-- Check DevTools console
+**Missing pages**
+- Content not fully loaded → retry
 
 ---
 
 ## 🔒 Privacy
 
-SnapPDF:
-- ❌ Does NOT collect data
-- ❌ Does NOT send requests to servers
-- ✅ Runs entirely in your browser
+- No tracking  
+- No uploads  
+- Runs entirely in your browser  
 
 ---
 
-## 🧩 Tech Stack
+## 🧩 Tech
 
-- Vanilla JavaScript
-- Chrome Extension (Manifest V3)
-- jsPDF
-
----
-
-## 📌 Notes
-
-This tool is optimized for:
-- Document viewers
-- Long scrolling pages
-- Dynamic content
+- Vanilla JavaScript  
+- Chrome Extension (Manifest V3)  
+- jsPDF  
 
 ---
 
-## ⭐ Future Improvements
+## ⭐ Use Cases
 
-- Auto-scroll detection
-- Smart retry for missing pages
-- Better UI with progress tracking
-- Multi-document export
-
----
-
-## 📬 Contributing
-
-Feel free to fork and improve the project.
+- Download Google Drive PDFs without download button  
+- Save long webpages as PDF  
+- Capture lazy-loaded content  
 
 ---
 
 ## 📄 License
 
-MIT License
+MIT
