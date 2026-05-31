@@ -42,9 +42,10 @@ btn.onclick = async () => {
             currentWindow: true
         });
 
+        // Isolated world keeps extension host_permissions so cross-origin
+        // image fetch (Scribd, etc.) is not blocked by page CORS.
         await chrome.scripting.executeScript({
             target: { tabId: tab.id },
-            world: "MAIN",
             files: [
                 "lib/jspdf.umd.min.js",
                 "main-runner.js"

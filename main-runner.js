@@ -50,24 +50,25 @@
 
         // ===== DETECT SOURCE =====
         function detectSource() {
+            if (document.querySelector(".newpage img.absimg, .newpage img[src^='http']")) {
+                return "http";
+            }
+
             const imgs = Array.from(document.images);
-        
             let data = 0, blob = 0, http = 0;
-        
+
             imgs.forEach(img => {
                 if (!img.src) return;
                 if (img.src.startsWith("data:")) data++;
                 else if (img.src.startsWith("blob:")) blob++;
                 else if (img.src.startsWith("http")) http++;
             });
-        
-            
+
             if (blob > 0) return "blob";
             if (data > 0) return "data";
             if (http > 0) return "http";
-        
             if (document.querySelectorAll("canvas").length > 0) return "canvas";
-        
+
             return "unknown";
         }
 
@@ -102,35 +103,47 @@
         }
 
 
+        async function autoScrollDocPages() {
+            const pages = Array.from(document.querySelectorAll(".newpage"));
+            if (!pages.length) return pages;
+
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].scrollIntoView({ behavior: "instant", block: "center" });
+                update(
+                    Math.round((i / pages.length) * 20),
+                    `Scrolling ${i + 1}/${pages.length}`
+                );
+                await new Promise(r => setTimeout(r, 150));
+            }
+
+            return pages;
+        }
+
         async function autoScrollGeneric() {
             const elements = Array.from(document.images)
                 .filter(img => img.src && (img.src.startsWith("data:") || img.src.startsWith("http")));
-        
+
             if (!elements.length) return;
-        
-            console.log("Generic elements:", elements.length);
-        
+
             for (let i = 0; i < elements.length; i++) {
-                elements[i].scrollIntoView({
-                    behavior: "instant",
-                    block: "center"
-                });
-        
+                elements[i].scrollIntoView({ behavior: "instant", block: "center" });
                 update(
                     Math.round((i / elements.length) * 20),
                     `Scrolling ${i + 1}/${elements.length}`
                 );
-        
                 await new Promise(r => setTimeout(r, 120));
             }
         }
-        
+
         // ===== RUN =====
         let pageContainers = [];
 
         if (location.hostname.includes("drive.google.com")) {
             pageContainers = await autoScrollDrive();
-        }else {
+        } else if (document.querySelector(".newpage")) {
+            pageContainers = await autoScrollDocPages();
+            await new Promise(r => setTimeout(r, 500));
+        } else {
             await autoScrollGeneric();
             await new Promise(r => setTimeout(r, 500));
         }
@@ -151,7 +164,65 @@
             }
         }
 
-                // ===== WAIT =====
+        async function ensureImageReady(img) {
+            if (img.complete && img.naturalWidth > 0) return;
+            await new Promise(res => {
+                const done = () => {
+                    img.removeEventListener("load", done);
+                    img.removeEventListener("error", done);
+                    res();
+                };
+                img.addEventListener("load", done, { once: true });
+                img.addEventListener("error", done, { once: true });
+            });
+        }
+
+        async function loadImageFromUrl(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error("Image decode failed"));
+                img.src = url;
+            });
+        }
+
+        async function fetchImageDrawable(src) {
+            const resp = await chrome.runtime.sendMessage({
+                type: "FETCH_IMAGE",
+                url: src
+            });
+
+            if (!resp?.ok) {
+                throw new Error(resp?.error || "Fetch failed");
+            }
+
+            return loadImageFromUrl(resp.data);
+        }
+
+        function pickHttpPageImages() {
+            if (pageContainers.length) {
+                const fromPages = pageContainers
+                    .map(page => page.querySelector("img.absimg, img[src^='http']"))
+                    .filter(img => img && img.src && img.src.startsWith("http"));
+
+                if (fromPages.length) return fromPages;
+            }
+
+            const docPageImgs = Array.from(
+                document.querySelectorAll(".newpage img.absimg, .newpage img")
+            ).filter(img => img.src && img.src.startsWith("http"));
+
+            if (docPageImgs.length) return docPageImgs;
+
+            return Array.from(document.images).filter(img => {
+                if (!img.src || !img.src.startsWith("http")) return false;
+                const w = img.naturalWidth || img.width || 0;
+                const h = img.naturalHeight || img.height || 0;
+                return w >= 500 && h >= 500;
+            });
+        }
+
+        // ===== WAIT =====
         async function waitBlobReady(pageCount) {
             const start = Date.now();
 
@@ -203,8 +274,7 @@
         }
 
         else if (source === "http") {
-            imgs = Array.from(document.images)
-                .filter(img => img.src.startsWith("http"))
+            imgs = pickHttpPageImages()
                 .map((img, i) => ({
                     el: img,
                     top: img.getBoundingClientRect().top + window.scrollY,
@@ -243,11 +313,9 @@
         const ctx = canvas.getContext("2d");
 
         let pdf;
-        let page = 0;
+        let added = 0;
 
         for (const item of imgs) {
-            page++;
-
             let w, h;
 
             if (item.canvas) {
@@ -260,16 +328,20 @@
                 ctx.drawImage(item.canvas, 0, 0);
             } else {
                 const img = item.el;
+                await ensureImageReady(img);
 
-                if (!img.complete || img.naturalWidth === 0) {
-                    await new Promise(res => {
-                        img.onload = res;
-                        img.onerror = res;
-                    });
+                let drawable = img;
+                if (source === "http") {
+                    try {
+                        drawable = await fetchImageDrawable(img.src);
+                    } catch (fetchErr) {
+                        console.warn("Skip page: fetch failed", img.src, fetchErr);
+                        continue;
+                    }
                 }
 
-                w = img.naturalWidth;
-                h = img.naturalHeight;
+                w = drawable.naturalWidth;
+                h = drawable.naturalHeight;
 
                 if (!w || !h) continue;
 
@@ -279,13 +351,24 @@
                 canvas.width = w2;
                 canvas.height = h2;
 
-                ctx.drawImage(img, 0, 0, w2, h2);
+                try {
+                    ctx.drawImage(drawable, 0, 0, w2, h2);
+                } catch (drawErr) {
+                    console.warn("Skip page: cannot draw image", img.src, drawErr);
+                    continue;
+                }
 
                 w = w2;
                 h = h2;
             }
 
-            const jpeg = canvas.toDataURL("image/jpeg", QUALITY);
+            let jpeg;
+            try {
+                jpeg = canvas.toDataURL("image/jpeg", QUALITY);
+            } catch (encodeErr) {
+                console.warn("Skip page: canvas export blocked", encodeErr);
+                continue;
+            }
 
             if (!pdf) {
                 pdf = new jsPDF({
@@ -299,11 +382,12 @@
             }
 
             pdf.addImage(jpeg, "JPEG", 0, 0, w, h);
+            added++;
 
-            const percent = Math.round((page / imgs.length) * 90);
-            update(percent, `Page ${page}/${imgs.length}`);
+            const percent = Math.round((added / imgs.length) * 90);
+            update(percent, `Page ${added}/${imgs.length}`);
 
-            if (page % 5 === 0) {
+            if (added % 5 === 0) {
                 await new Promise(r => setTimeout(r, 0));
             }
         }
